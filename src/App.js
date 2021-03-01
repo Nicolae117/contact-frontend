@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import './App.css';
+import axios from 'axios';
 var $ = require( "jquery" );
 
 export class App extends Component {
@@ -7,16 +8,42 @@ export class App extends Component {
     constructor() {
         super();
         this.state = {
-          name: "",
-          email: "",
-          message: "",
-          status: "Submit"
+            name: '',
+            message: '',
+            email: '',
+            sent: false,
+            buttonText: 'Send Message'
         };   
     } 
 
   componentDidMount() {
     //Preloader
     $('#preloader').delay(350).fadeOut('slow');    
+  }
+
+
+  formSubmit = (e) => {
+    e.preventDefault()
+  
+    this.setState({
+        buttonText: '...sending'
+    })
+  
+    let data = {
+        name: this.state.name,
+        email: this.state.email,
+        message: this.state.message
+    }
+
+    
+    
+    axios.post('API_URI', data)
+    .then( res => {
+        this.setState({ sent: true }, this.resetForm())
+    })
+    .catch( () => {
+      console.log('Message not sent')
+    })
   }
 
 
@@ -31,24 +58,6 @@ export class App extends Component {
     }
   }
 
-  handleSubmit(event) {
-    event.preventDefault();  
-    this.setState({ status: "Sending" });  
-    axios({
-      method: "POST",
-      url: "http://localhost:5000/contact",
-      data: this.state,
-    }).then((response) => {
-      if (response.data.status === "sent") {
-        alert("Message Sent");
-        this.setState({ name: "", email: "", message: "", status: "Submit" });
-      } else if (response.data.status === "failed") {
-        alert("Message Failed");
-      }
-    });
-  }
-
-  
 
   render() {
     return (
@@ -610,7 +619,7 @@ export class App extends Component {
 
                     {/* contact form start */}
                     <div className="col-lg-12">
-                        <form onSubmit={this.handleSubmit.bind(this)} method="POST" className="wow fadeInUp" data-wow-delay="0.4s" noValidate="noValidate">
+                        <form onSubmit={(e) => this.formSubmit(e)} method="POST" className="wow fadeInUp" data-wow-delay="0.4s" noValidate="noValidate">
                             <div className="contactform">
                                 <div className="row">
                                     <div className="col-lg-6">
@@ -653,7 +662,7 @@ export class App extends Component {
                                             onChange={this.handleChange.bind(this)}
                                             required
                                         ></textarea>
-                                        <input type="submit" value="Send Message" className="wpcf7-form-control wpcf7-submit" />
+                                        <button type="submit" className="wpcf7-form-control wpcf7-submit">{ this.state.buttonText }</button>
                                     </div>
                                 </div>
                             </div>
